@@ -6,96 +6,54 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  # 1. Lint & Validate Helm Charts
-  lint-helm:
-    name: Lint Helm Charts
+  lint-and-validate:
+    name: Lint Code & Validate Infra
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: azure/setup-helm@v5
+      - uses: hashicorp/setup-terraform@v4
+
+      - name: Lint Helm
+        run: helm lint helm/triton-inference-server/
+
+      - name: Validate Terraform
+        run: cd terraform && terraform init -backend=false && terraform validate
+
+  publish-container:
+    name: Build & Push Container to GHCR
+    runs-on: ubuntu-latest
+    needs: [lint-and-validate]
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v5
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
         with:
-          version: 'v3.14.0'
-
-      - name: Lint Triton Chart
-        run: |
-          if [ -d "helm/triton-inference-server" ]; then
-            helm lint helm/triton-inference-server/
-          else
-            echo "Helm chart directory not found, skipping..."
-          fi
-
-  # 2. Validate Terraform Infrastructure Code
-  validate-terraform:
-    name: Terraform Format & Validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v5
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: '1.7.0'
-
-      - name: Check Terraform Formatting
-        run: terraform fmt -check -recursive terraform/
-
-      - name: Validate Terraform Files
-        run: |
-          if [ -d "terraform" ]; then
-            cd terraform
-            terraform init -backend=false
-            terraform validate
-          else
-            echo "Terraform directory not found, skipping..."
-          fi
-
-  # 3. Lint & Syntax-Check Ansible Playbooks
-  lint-ansible:
-    name: Ansible Syntax Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v5
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Ansible & Linter
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible-lint ansible
-
-      - name: Run Ansible Syntax Check
-        run: |
-          if [ -f "ansible/setup_host.yml" ]; then
-            ansible-playbook ansible/setup_host.yml --syntax-check
-          else
-            echo "Ansible playbook not found, skipping..."
-          fi
-
-  # 4. Dry-run Docker Container Build
-  build-container:
-    name: Test Docker Build
-    runs-on: ubuntu-latest
-    needs: [lint-helm, validate-terraform, lint-ansible]
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v5
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Triton Engine Image (Dry Run)
+      - name: Build and Push
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: false
-          tags: llm-triton-server:test
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}

@@ -1,6 +1,20 @@
 ---
-- name: Bootstrap Host
+- name: Bootstrap Host NVIDIA Container Runtime
   hosts: localhost
+  connection: local
+  become: true
   tasks:
-    - name: Ping host
-      ansible.builtin.ping:
+    - name: Ensure NVIDIA Container Toolkit is installed
+      ansible.builtin.package:
+        name: nvidia-container-toolkit
+        state: present
+
+    - name: Configure Containerd for NVIDIA Runtime
+      ansible.builtin.command: nvidia-ctk runtime configure --runtime=containerd
+      changed_when: false
+
+    - name: Ensure /dev/shm directory exists
+      ansible.builtin.file:
+        path: /dev/shm
+        state: directory
+        mode: '1777'

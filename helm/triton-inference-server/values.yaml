@@ -1,0 +1,25 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/krishpn/cicdtest
+  tag: main
+  pullPolicy: Always
+
+runtimeClassName: nvidia
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+    memory: 16Gi
+    cpu: "8"
+  requests:
+    nvidia.com/gpu: 1
+    memory: 8Gi
+    cpu: "4"
+
+service:
+  type: NodePort
+  ports:
+    http: 30800
+    grpc: 30801
+    metrics: 30802
