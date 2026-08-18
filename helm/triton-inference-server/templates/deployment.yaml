@@ -27,8 +27,12 @@ spec:
         volumeMounts:
         - name: dshm
           mountPath: /dev/shm
+        - name: model-repository
+          mountPath: /opt/model_repository
       volumes:
       - name: dshm
         emptyDir:
           medium: Memory
           sizeLimit: 4Gi
+      - name: model-repository
+        emptyDir: {}
