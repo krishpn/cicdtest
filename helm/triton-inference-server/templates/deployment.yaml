@@ -14,6 +14,10 @@ spec:
         app: {{ .Release.Name }}
     spec:
       runtimeClassName: {{ .Values.runtimeClassName }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
       - name: triton
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
