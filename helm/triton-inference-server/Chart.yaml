@@ -1,0 +1,6 @@
+apiVersion: v2
+name: triton-inference-server
+description: Helm chart for Triton
+type: application
+version: 0.1.0
+appVersion: "24.08"
