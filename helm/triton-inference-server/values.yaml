@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/krishpn/cicdtest
+  repository: ghcr.io/krishpn/cicdtest/triton-inference-server
   tag: latest
   pullPolicy: Always
 
@@ -20,9 +20,18 @@ resources:
     memory: 8Gi
     cpu: "4"
 
+# Allocated shared memory size for PyTorch/vLLM backends
+shmSize: 4Gi
+
 service:
   type: NodePort
   ports:
-    http: 30800
-    grpc: 30801
-    metrics: 30802
+    http:
+      port: 8000
+      nodePort: 30800
+    grpc:
+      port: 8001
+      nodePort: 30801
+    metrics:
+      port: 8002
+      nodePort: 30802

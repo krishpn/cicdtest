@@ -10,10 +10,16 @@ spec:
   ports:
     - name: http
       port: 8000
-      nodePort: {{ .Values.service.ports.http }}
+      targetPort: 8000
+      nodePort: {{ .Values.service.ports.http | int }}
+      protocol: TCP
     - name: grpc
       port: 8001
-      nodePort: {{ .Values.service.ports.grpc }}
+      targetPort: 8001
+      nodePort: {{ .Values.service.ports.grpc | int }}
+      protocol: TCP
     - name: metrics
       port: 8002
-      nodePort: {{ .Values.service.ports.metrics }}
+      targetPort: 8002
+      nodePort: {{ .Values.service.ports.metrics | int }}
+      protocol: TCP

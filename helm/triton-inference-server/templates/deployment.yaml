@@ -13,7 +13,9 @@ spec:
       labels:
         app: {{ .Release.Name }}
     spec:
+      {{- if .Values.runtimeClassName }}
       runtimeClassName: {{ .Values.runtimeClassName }}
+      {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -22,17 +24,20 @@ spec:
       - name: triton
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 8000
+        - name: grpc
+          containerPort: 8001
+        - name: metrics
+          containerPort: 8002
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
         volumeMounts:
         - name: dshm
           mountPath: /dev/shm
-        - name: model-repository
-          mountPath: /opt/model_repository
       volumes:
       - name: dshm
         emptyDir:
           medium: Memory
-          sizeLimit: 4Gi
-      - name: model-repository
-        emptyDir: {}
+          sizeLimit: {{ .Values.shmSize | default "4Gi" }}
