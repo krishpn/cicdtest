@@ -22,9 +22,20 @@ resources:
 
 shmSize: 4Gi
 
+triton:
+  modelRepositoryPath: "/opt/model_repository"
+  modelControlMode: "explicit"
+
+hostPath:
+  enabled: true
+  path: "/home/krishna/Documents/personal/practice/triton/nkepsX/model_repository"
+
 service:
   type: NodePort
-  ports:
+  httpPort: 8000
+  grpcPort: 8001
+  metricsPort: 8002
+  nodePorts:
     http: 30800
     grpc: 30801
     metrics: 30802
