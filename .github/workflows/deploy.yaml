@@ -10,7 +10,6 @@ env:
 
 jobs:
   build-and-deploy:
-    #runs-on: ubuntu-latest
     runs-on: self-hosted
     permissions:
       contents: read
@@ -79,6 +78,16 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Configure Local k3s Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          # Copies local k3s config to runner's environment if not present
+          if [ -f /etc/rancher/k3s/k3s.yaml ]; then
+            sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+            sudo chown $(whoami) ~/.kube/config
+            chmod 600 ~/.kube/config
+          fi
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
