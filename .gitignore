@@ -1,0 +1,8 @@
+# Prevent committing large binary model weights
+*.onnx
+*.bin
+*.pt
+*.pth
+*.safetensors
+*.engine
+model_repository/*/*/model.onnx
