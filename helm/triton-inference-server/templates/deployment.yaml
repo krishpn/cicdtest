@@ -53,3 +53,7 @@ spec:
         emptyDir:
           medium: Memory
           sizeLimit: {{ .Values.shmSize | default "4Gi" }}
+
+
+
+

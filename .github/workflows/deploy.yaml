@@ -20,6 +20,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set Short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
@@ -82,4 +86,4 @@ jobs:
             --namespace triton \
             --create-namespace \
             --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set image.tag=sha-${{ github.sha_short }}
+            --set image.tag=sha-${{ steps.vars.outputs.sha_short }}
